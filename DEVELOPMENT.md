@@ -71,6 +71,18 @@ npm run package --[option]
 DEBUG_PROD=true npm run package
 ```
 
+To packege Windows app on Linux or WSL:
+
+```bash
+docker run -it -v $(pwd):/project electronuserland/builder:wine
+```
+
+In container, run:
+ls
+```bash
+npm run package-win
+```
+
 ## Publishing
 
 First, create a [personal access GitHub Token](https://github.com/settings/tokens) with the `repo` permission.

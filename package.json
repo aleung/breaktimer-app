@@ -240,6 +240,7 @@
     "react-router": "^4.3.1",
     "react-router-dom": "^4.3.1",
     "react-spring": "^9.2.4",
+    "regenerator-runtime": "^0.14.1",
     "source-map-support": "^0.5.9",
     "ws": "^7.5.10",
     "xstate": "^4.25.0"
