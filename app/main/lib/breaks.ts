@@ -1,5 +1,7 @@
-import moment, { Moment } from "moment";
+import moment from "moment";
 import { PowerMonitor } from "electron";
+import log from "electron-log";
+
 import { Settings, NotificationType } from "../../types/settings";
 import { BreakTime } from "../../types/breaks";
 import { IpcChannel } from "../../types/ipc";
@@ -13,9 +15,7 @@ let powerMonitor: PowerMonitor;
 let breakTime: BreakTime = null;
 let havingBreak = false;
 let postponedCount = 0;
-let idleStart: Date | null = null;
-let lockStart: Date | null = null;
-let lastTick: Date | null = null;
+let lastActiveTime = 0;
 
 export function getBreakTime(): BreakTime {
   return breakTime;
@@ -24,11 +24,6 @@ export function getBreakTime(): BreakTime {
 export function getBreakLength(): Date {
   const settings: Settings = getSettings();
   return settings.breakLength;
-}
-
-function zeroPad(n: number) {
-  const nStr = String(n);
-  return nStr.length === 1 ? `0${nStr}` : nStr;
 }
 
 function getSeconds(date: Date): number {
@@ -42,51 +37,14 @@ function getIdleResetSeconds(): number {
   return getSeconds(new Date(settings.idleResetLength));
 }
 
-function getBreakSeconds(): number {
-  const settings: Settings = getSettings();
-  return getSeconds(new Date(settings.breakFrequency));
-}
-
-function createIdleNotification() {
-  const settings: Settings = getSettings();
-
-  if (!settings.idleResetEnabled || idleStart === null) {
-    return;
-  }
-
-  let idleSeconds = Number(((+new Date() - +idleStart) / 1000).toFixed(0));
-  let idleMinutes = 0;
-  let idleHours = 0;
-
-  if (idleSeconds > 60) {
-    idleMinutes = Math.floor(idleSeconds / 60);
-    idleSeconds -= idleMinutes * 60;
-  }
-
-  if (idleMinutes > 60) {
-    idleHours = Math.floor(idleMinutes / 60);
-    idleMinutes -= idleHours * 60;
-  }
-
-  if (settings.idleResetNotification) {
-    showNotification(
-      "Break countdown reset",
-      `Idle for ${zeroPad(idleHours)}:${zeroPad(idleMinutes)}:${zeroPad(
-        idleSeconds
-      )}`
-    );
-  }
-}
-
+/**
+ * Set next break time
+ * @param isPostpone Whether or not the break is being postponed
+ */
 export function createBreak(isPostpone = false): void {
+  postponedCount = 0;
+
   const settings: Settings = getSettings();
-
-  if (idleStart) {
-    createIdleNotification();
-    idleStart = null;
-    postponedCount = 0;
-  }
-
   const freq = new Date(
     isPostpone ? settings.postponeLength : settings.breakFrequency
   );
@@ -118,12 +76,16 @@ export function postponeBreak(): void {
   createBreak(true);
 }
 
+/**
+ * Start a break
+ */
 function doBreak(): void {
   havingBreak = true;
 
   const settings: Settings = getSettings();
 
   if (settings.notificationType === NotificationType.Notification) {
+    // show a notification and schedule the next break
     showNotification(settings.breakTitle, settings.breakMessage);
     if (settings.gongEnabled) {
       sendIpc(IpcChannel.GongStartPlay);
@@ -137,63 +99,6 @@ function doBreak(): void {
   }
 }
 
-interface Days {
-  0: boolean;
-  1: boolean;
-  2: boolean;
-  3: boolean;
-  4: boolean;
-  5: boolean;
-  6: boolean;
-}
-
-export function checkInWorkingHours(): boolean {
-  const settings: Settings = getSettings();
-
-  if (!settings.workingHoursEnabled) {
-    return true;
-  }
-
-  const now = moment();
-
-  const days: Days = {
-    0: settings.workingHoursSunday,
-    1: settings.workingHoursMonday,
-    2: settings.workingHoursTuesday,
-    3: settings.workingHoursWednesday,
-    4: settings.workingHoursThursday,
-    5: settings.workingHoursFriday,
-    6: settings.workingHoursSaturday,
-  };
-
-  const isWorkingDay = days[now.day() as keyof Days];
-
-  if (!isWorkingDay) {
-    return false;
-  }
-
-  let hoursFrom: Date | Moment = new Date(settings.workingHoursFrom);
-  let hoursTo: Date | Moment = new Date(settings.workingHoursTo);
-  hoursFrom = moment()
-    .set("hours", hoursFrom.getHours())
-    .set("minutes", hoursFrom.getMinutes())
-    .set("seconds", 0);
-  hoursTo = moment()
-    .set("hours", hoursTo.getHours())
-    .set("minutes", hoursTo.getMinutes())
-    .set("seconds", 0);
-
-  if (now < hoursFrom) {
-    return false;
-  }
-
-  if (now > hoursTo) {
-    return false;
-  }
-
-  return true;
-}
-
 enum IdleState {
   Active = "active",
   Idle = "idle",
@@ -201,48 +106,32 @@ enum IdleState {
   Unknown = "unknown",
 }
 
-export function checkIdle(): boolean {
+/**
+ * Check whether the computer has been idle long enough to reset a break.
+ * @returns {boolean} true - reset
+ */
+function checkIdleReset(): boolean {
   const settings: Settings = getSettings();
-
-  const state: IdleState = powerMonitor.getSystemIdleState(
-    getIdleResetSeconds()
-  ) as IdleState;
-
-  if (state === IdleState.Locked) {
-    if (!lockStart) {
-      lockStart = new Date();
-      return false;
-    } else {
-      const lockSeconds = Number(
-        ((+new Date() - +lockStart) / 1000).toFixed(0)
-      );
-      return lockSeconds > getIdleResetSeconds();
-    }
-  }
-
-  lockStart = null;
 
   if (!settings.idleResetEnabled) {
     return false;
   }
 
-  return state === IdleState.Idle;
-}
+  const state = powerMonitor.getSystemIdleState(1) as IdleState;
 
-function checkShouldHaveBreak(): boolean {
-  const settings: Settings = getSettings();
-  const inWorkingHours = checkInWorkingHours();
-  const idle = checkIdle();
-
-  return !havingBreak && settings.breaksEnabled && inWorkingHours && !idle;
-}
-
-function checkBreak(): void {
-  const now = moment();
-
-  if (breakTime !== null && now > breakTime) {
-    doBreak();
+  if (state === IdleState.Active) {
+    lastActiveTime = Date.now();
+  } else {
+    if (lastActiveTime) {
+      const idleSeconds = (Date.now() - lastActiveTime) / 1000;
+      if (idleSeconds > getIdleResetSeconds()) {
+        lastActiveTime = 0;
+        return true;
+      }
+    }
   }
+
+  return false;
 }
 
 export function startBreakNow(): void {
@@ -250,61 +139,24 @@ export function startBreakNow(): void {
 }
 
 function tick(): void {
-  try {
-    const shouldHaveBreak = checkShouldHaveBreak();
+  log.debug("tick - (now, breakTime)：", moment(), breakTime);
 
-    // This can happen if the computer is put to sleep. In this case, we want
-    // to skip the break if the time the computer was unresponsive was greater
-    // than the idle reset.
-    const secondsSinceLastTick = lastTick
-      ? Math.abs(+new Date() - +lastTick) / 1000
-      : 0;
-    const breakSeconds = getBreakSeconds();
-    const lockSeconds = lockStart && Math.abs(+new Date() - +lockStart) / 1000;
-
-    if (lockStart && lockSeconds !== null && lockSeconds > breakSeconds) {
-      // The computer has been locked for longer than the break period. In this
-      // case, it's not particularly helpful to show an idle reset
-      // notification, so unset idle start
-      idleStart = null;
-      lockStart = null;
-    } else if (secondsSinceLastTick > breakSeconds) {
-      // The computer has been slept for longer than the break period. In this
-      // case, it's not particularly helpful to show an idle reset
-      // notification, so just reset the break
-      lockStart = null;
-      breakTime = null;
-    } else if (secondsSinceLastTick > getIdleResetSeconds()) {
-      //  If idleStart exists, it means we were idle before the computer slept.
-      //  If it doesn't exist, count the computer going unresponsive as the
-      //  start of the idle period.
-      if (!idleStart) {
-        lockStart = null;
-        idleStart = lastTick;
-      }
-      createBreak();
-    }
-
-    if (!shouldHaveBreak && !havingBreak && breakTime) {
-      if (checkIdle()) {
-        idleStart = new Date();
-      }
-      breakTime = null;
-      buildTray();
-      return;
-    }
-
-    if (shouldHaveBreak && !breakTime) {
-      createBreak();
-      return;
-    }
-
-    if (shouldHaveBreak) {
-      checkBreak();
-    }
-  } finally {
-    lastTick = new Date();
+  if (havingBreak) {
+    // we do nothing when it's in a break
+  } else if (!getSettings().breaksEnabled) {
+    // clear break if breaks are disabled
+    breakTime = null;
+  } else if (breakTime && moment() > breakTime) {
+    // it's time to have a break
+    log.info("It's time to have a break");
+    doBreak();
+  } else if (checkIdleReset() || !breakTime) {
+    // idle reset or no break, create next break
+    log.info("Create next break");
+    createBreak();
   }
+
+  buildTray();
 }
 
 let tickInterval: NodeJS.Timeout;
@@ -312,7 +164,7 @@ let tickInterval: NodeJS.Timeout;
 export function initBreaks(): void {
   powerMonitor = require("electron").powerMonitor;
 
-  const settings: Settings = getSettings();
+  const settings = getSettings();
 
   if (settings.breaksEnabled) {
     createBreak();
@@ -322,5 +174,5 @@ export function initBreaks(): void {
     clearInterval(tickInterval);
   }
 
-  tickInterval = setInterval(tick, 1000);
+  tickInterval = setInterval(tick, 2000);
 }
