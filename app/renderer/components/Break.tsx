@@ -250,15 +250,21 @@ export default function Break() {
   }));
 
   React.useEffect(() => {
-    setTimeout(async () => {
+    const init = async () => {
+      const [allowPostpone, settings] = await Promise.all([
+        ipcRenderer.invokeGetAllowPostpone(),
+        ipcRenderer.invokeGetSettings() as Promise<Settings>,
+      ]);
+
+      setAllowPostpone(allowPostpone);
+      setSettings(settings);
+
       animApi({
         backgroundOpacity: 0.8,
         backdropOpacity: 1,
         width: 250,
         height: 250,
       });
-      const allowPostpone = await ipcRenderer.invokeGetAllowPostpone();
-      const settings = (await ipcRenderer.invokeGetSettings()) as Settings;
 
       // Skip the countdown if these are disabled
       if (
@@ -268,10 +274,12 @@ export default function Break() {
         setCountingDown(false);
       }
 
-      setAllowPostpone(await ipcRenderer.invokeGetAllowPostpone());
-      setSettings(settings);
       setReady(true);
-    }, 1000);
+    };
+
+    // Delay or the window displays incorrectly.
+    // FIXME: work out why and how to avoid this.
+    setTimeout(init, 1000);
   }, [animApi]);
 
   const handleCountdownOver = React.useCallback(() => {
