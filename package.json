@@ -32,6 +32,7 @@
     "copyright": "Copyright © 2019 Thomas James Watson",
     "appId": "com.tomjwatson.breaktimer",
     "files": [
+      "!node_modules",
       "app/renderer/dist/",
       "app/renderer/sounds/",
       "app/renderer/preload.js",
