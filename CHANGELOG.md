@@ -1,5 +1,12 @@
 # Changelog
 
+## Build 2024-12-06
+
+Other changes:
+
+- Port some fixes from BreakTimer origin v1.3.2 (see git log)
+- Update depenencies
+
 ## Build 2024-12-05
 
 New feature:
