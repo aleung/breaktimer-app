@@ -19,7 +19,6 @@
     "publish-mac": "npm run postinstall && npm run build && electron-builder build --mac --publish always",
     "publish-win": "npm run postinstall && npm run build && electron-builder build --win --x64 --publish always",
     "postinstall": "patch-package && electron-builder install-app-deps",
-    "precommit": "npm run lint",
     "prettier-check": "prettier --check \"**/*.{js,jsx,ts,tsx,css,scss,json,yml}\"",
     "prettier-fix": "prettier --write \"**/*.{js,jsx,ts,tsx,css,scss,json,yml}\"",
     "start": "cross-env NODE_ENV=production electron ./app/main/dist/main.prod.js",
@@ -129,13 +128,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/tom-james-watson/breaktimer-app.git"
-  },
-  "bugs": {
-    "url": "https://github.com/tom-james-watson/breaktimer-app/issues"
+    "url": "git+ssh://git@github.com/aleung/breaktimer-app.git"
   },
   "author": "Tom Watson <tom@tomjwatson.com>",
-  "homepage": "https://github.com/tom-james-watson/breaktimer-app",
   "devDependencies": {
     "@babel/core": "^7.10.3",
     "@babel/plugin-proposal-class-properties": "^7.2.3",
@@ -161,6 +156,7 @@
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.15.0",
     "@babel/register": "^7.0.0",
+    "@electron/notarize": "^2.5.0",
     "@types/auto-launch": "^5.0.2",
     "@types/howler": "^2.2.4",
     "@types/node": "^16.9.3",
@@ -186,7 +182,6 @@
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.1.1",
     "electron-log": "^4.3.2",
-    "electron-notarize": "^1.2.1",
     "electron-updater": "^6.3.0",
     "enzyme": "^3.8.0",
     "enzyme-adapter-react-16": "^1.7.1",
@@ -227,7 +222,6 @@
     "@blueprintjs/datetime": "^5.3.11",
     "@blueprintjs/icons": "^5.13.0",
     "@blueprintjs/table": "^5.2.2",
-    "@types/moment-timezone": "^0.5.12",
     "auto-launch": "^5.0.5",
     "brace": "^0.11.1",
     "classnames": "^2.3.2",
