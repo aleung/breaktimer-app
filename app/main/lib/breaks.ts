@@ -139,7 +139,7 @@ export function startBreakNow(): void {
 }
 
 function tick(): void {
-  log.debug("tick - (now, breakTime)：", moment(), breakTime);
+  log.debug("tick - (breakTime)：", breakTime);
 
   if (havingBreak) {
     // we do nothing when it's in a break
