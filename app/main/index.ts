@@ -4,11 +4,7 @@ import { app } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import { initBreaks } from "./lib/breaks";
-import {
-  getAppInitialized,
-  setAppInitialized,
-  setBreaksEnabled,
-} from "./lib/store";
+import { getAppInitialized, setAppInitialized } from "./lib/store";
 import { createSoundsWindow, createSettingsWindow } from "./lib/windows";
 import { setAutoLauch } from "./lib/auto-launch";
 import { showNotification } from "./lib/notifications";
@@ -16,22 +12,8 @@ import { initTray } from "./lib/tray";
 import "./lib/ipc";
 
 const gotTheLock = app.requestSingleInstanceLock();
-
 if (!gotTheLock) {
-  const cliArg = process.argv[process.argv.length - 1];
-
-  if (cliArg === "disable") {
-    console.log("breaks disabled");
-    setBreaksEnabled(false);
-  } else if (cliArg === "enable") {
-    console.log("breaks enabled");
-    setBreaksEnabled(true);
-  } else if (process.platform !== "darwin") {
-    console.log("app already open, opening settings");
-    createSettingsWindow();
-  } else {
-    log.info("app already running");
-  }
+  log.info("app already running");
   app.exit();
 }
 
@@ -63,8 +45,13 @@ if (
 //   ).catch(console.log)
 // }
 
-// Don't exit on close all windows - live in tray
-app.on("window-all-closed", (e: Event) => e.preventDefault());
+app.on("window-all-closed", () => {
+  // Don't exit on close all windows - live in tray
+});
+
+app.on("second-instance", () => {
+  createSettingsWindow();
+});
 
 app.on("ready", async () => {
   if (

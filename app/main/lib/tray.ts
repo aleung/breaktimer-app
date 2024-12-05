@@ -1,11 +1,13 @@
 import path from "path";
 import moment from "moment";
 import { app, dialog, Menu, Tray } from "electron";
+
 import packageJson from "../../../package.json";
 import { Settings } from "../../types/settings";
 import { getSettings, setSettings } from "./store";
 import { createSettingsWindow } from "./windows";
 import { getBreakTime, startBreakNow, createBreak } from "./breaks";
+
 
 let tray: Tray;
 let lastMinsLeft = 0;
@@ -51,8 +53,6 @@ function getTrayIconPath(
     ? path.join("resources", "tray", trayIconFileName)
     : path.join(
         process.resourcesPath,
-        "app",
-        "resources",
         "tray",
         trayIconFileName
       );

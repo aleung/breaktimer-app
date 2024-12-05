@@ -58,7 +58,13 @@
         ]
       }
     ],
-    "asar": false,
+    "extraResources": [
+      {
+        "from": "resources/tray",
+        "to": "tray"
+      }
+    ],
+    "asar": true,
     "artifactName": "${productName}.${ext}",
     "mac": {
       "entitlements": "./internals/build/entitlements.mac.plist",
