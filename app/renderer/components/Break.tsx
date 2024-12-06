@@ -16,12 +16,6 @@ function createRgba(hex: string, a: number) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-interface TimeRemaining {
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
-
 interface SpinnerProps {
   value: number;
   textColor: string;
@@ -62,9 +56,7 @@ interface BreakProgressProps {
 function BreakProgress(props: BreakProgressProps) {
   const { breakMessage, endBreakEnabled, onEndBreak, settings, textColor } =
     props;
-  const [timeRemaining, setTimeRemaining] =
-    React.useState<TimeRemaining | null>(null);
-  const [progress, setProgress] = React.useState<number | null>(null);
+  const [progress, setProgress] = React.useState<number>(0);
 
   React.useEffect(() => {
     if (settings.gongEnabled) {
@@ -87,12 +79,9 @@ function BreakProgress(props: BreakProgressProps) {
         }
 
         const msRemaining = moment(breakEndTime).diff(now, "milliseconds");
+
         setProgress(1 - msRemaining / startMsRemaining);
-        setTimeRemaining({
-          hours: Math.floor(msRemaining / 1000 / 3600),
-          minutes: Math.floor(msRemaining / 1000 / 60),
-          seconds: (msRemaining / 1000) % 60,
-        });
+
         setTimeout(tick, TICK_MS);
       };
 
@@ -107,9 +96,6 @@ function BreakProgress(props: BreakProgressProps) {
     delay: 500,
   });
 
-  if (timeRemaining === null || progress === null) {
-    return null;
-  }
 
   return (
     <animated.div className={styles.breakProgress} style={fadeIn}>

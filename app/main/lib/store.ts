@@ -38,6 +38,10 @@ const store = new Store<{
   },
 });
 
+/**
+ * Warning: the returned properties in `Date` type are not real `Date` object.
+ * Pass the value into Date constructure to get the real Date object.
+ */
 export function getSettings(): Settings {
   return Object.assign(defaultSettings, store.get("settings")) as Settings;
 }

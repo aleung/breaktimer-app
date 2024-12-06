@@ -23,10 +23,10 @@ export function getBreakTime(): BreakTime {
 }
 
 export function getBreakEndTime(): Date {
-  const settings: Settings = getSettings();
   const breakStart = lastActiveTime > 0 ? lastActiveTime : Date.now();
-  const breakEnd = breakStart + getSeconds(settings.breakLength);
-  return new Date(breakEnd);
+  const breakEndTime =
+    breakStart + getSeconds(new Date(getSettings().breakLength)) * 1000;
+  return new Date(breakEndTime);
 }
 
 function getSeconds(date: Date): number {
