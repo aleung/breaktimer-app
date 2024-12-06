@@ -81,7 +81,11 @@ DEBUG_PROD=true npm run package
 To packege Windows app on Linux or WSL:
 
 ```bash
-docker run -it -v $(pwd):/project electronuserland/builder:wine
+docker run --rm -it \
+  -v ${PWD}:/project \
+  -v ~/.cache/electron:/root/.cache/electron \
+  -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+  electronuserland/builder:wine
 ```
 
 In container, run:
