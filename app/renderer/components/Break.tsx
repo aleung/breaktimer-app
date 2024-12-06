@@ -65,9 +65,6 @@ function BreakProgress(props: BreakProgressProps) {
 
     (async () => {
       const breakEndTime = await ipcRenderer.invokeGetBreakEndtime();
-      ipcRenderer.sendLog(
-        `BreakProgress getBreakEndTime: ${breakEndTime}`
-      ); // TODO: for debug
       const startMsRemaining = moment(breakEndTime).diff(
         moment(),
         "milliseconds"
@@ -77,15 +74,11 @@ function BreakProgress(props: BreakProgressProps) {
         const now = moment();
 
         if (now > moment(breakEndTime)) {
-          ipcRenderer.sendLog(`BreakProgress tick: end break, ${breakEndTime}`); // TODO: for debug
           onEndBreak();
           return;
         }
 
         const msRemaining = moment(breakEndTime).diff(now, "milliseconds");
-        ipcRenderer.sendLog(
-          `BreakProgress tick: ${msRemaining} ${startMsRemaining}`
-        ); // TODO: for debug
 
         setProgress(1 - msRemaining / startMsRemaining);
 

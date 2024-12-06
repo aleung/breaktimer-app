@@ -7,6 +7,11 @@ import { getWindows } from "./windows";
 import { getBreakEndTime, getAllowPostpone, postponeBreak } from "./breaks";
 import { getSettings, setSettings } from "./store";
 
+/**
+ * Send IPC event to renderer
+ * @param channel
+ * @param args
+ */
 export function sendIpc(channel: IpcChannel, ...args: unknown[]): void {
   const windows: BrowserWindow[] = getWindows();
 
@@ -56,7 +61,9 @@ ipcMain.handle(
 
 ipcMain.handle(IpcChannel.BreakEndTimeGet, (): Date => {
   log.info(IpcChannel.BreakEndTimeGet);
-  return getBreakEndTime();
+  const breakEnd = getBreakEndTime();
+  log.debug("getBreakEndTime", breakEnd.toLocaleTimeString()); // TODO: debug
+  return breakEnd;
 });
 
 ipcMain.on(IpcChannel.DebugLog, (_event: IpcMainInvokeEvent, message: string): void => {
