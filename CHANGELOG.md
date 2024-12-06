@@ -11,7 +11,7 @@ Other changes:
 
 - Improve the logic for idle reset
 - Port some fixes from BreakTimer origin v1.3.2 (see git log)
-- Update depenencies
+- Update dependencies
 
 ## Build 2024-12-05
 
