@@ -25,8 +25,9 @@ export function getBreakTime(): BreakTime {
 export function getBreakEndTime(): Date {
   const settings: Settings = getSettings();
   const breakStart = lastActiveTime > 0 ? lastActiveTime : Date.now();
-  const breakEnd = breakStart + getSeconds(settings.breakLength);
-  return new Date(breakEnd);
+  const breakEnd = new Date(breakStart + getSeconds(settings.breakLength));
+  log.debug("getBreakEndTime", breakEnd.toLocaleTimeString());
+  return breakEnd;
 }
 
 function getSeconds(date: Date): number {

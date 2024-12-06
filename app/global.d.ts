@@ -8,6 +8,7 @@ declare const ipcRenderer: {
   invokeSetSettings: (settings: unknown) => Promise<void>;
   onPlayEndGong: (cb: () => void) => Promise<void>;
   onPlayStartGong: (cb: () => void) => Promise<void>;
+  sendLog: (message: string) => void;
 };
 
 declare const processEnv: {

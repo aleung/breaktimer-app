@@ -32,6 +32,9 @@ process.once("loaded", () => {
     invokeSetSettings: (settings) => {
       return ipcRenderer.invoke("SETTINGS_SET", settings);
     },
+    sendLog: (message) => {
+      ipcRenderer.send("LOG", message);
+    },
     onPlayEndGong: (cb) => {
       ipcRenderer.on("GONG_END_PLAY", cb);
     },

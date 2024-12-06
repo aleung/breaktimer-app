@@ -1,5 +1,6 @@
 import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
 import log from "electron-log";
+
 import { Settings } from "../../types/settings";
 import { IpcChannel } from "../../types/ipc";
 import { getWindows } from "./windows";
@@ -56,4 +57,8 @@ ipcMain.handle(
 ipcMain.handle(IpcChannel.BreakEndTimeGet, (): Date => {
   log.info(IpcChannel.BreakEndTimeGet);
   return getBreakEndTime();
+});
+
+ipcMain.on(IpcChannel.DebugLog, (_event: IpcMainInvokeEvent, message: string): void => {
+  log.debug(message);
 });
