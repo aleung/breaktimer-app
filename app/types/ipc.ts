@@ -1,6 +1,6 @@
 export enum IpcChannel {
   AllowPostponeGet = "ALLOW_POSTPONE_GET",
-  BreakLengthGet = "BREAK_LENGTH_GET",
+  BreakEndTimeGet = "BREAK_END_TIME_GET",
   BreakPostpone = "BREAK_POSTPONE",
   Error = "ERROR",
   GongEndPlay = "GONG_END_PLAY",

@@ -3,7 +3,7 @@ import log from "electron-log";
 import { Settings } from "../../types/settings";
 import { IpcChannel } from "../../types/ipc";
 import { getWindows } from "./windows";
-import { getBreakLength, getAllowPostpone, postponeBreak } from "./breaks";
+import { getBreakEndTime, getAllowPostpone, postponeBreak } from "./breaks";
 import { getSettings, setSettings } from "./store";
 
 export function sendIpc(channel: IpcChannel, ...args: unknown[]): void {
@@ -53,7 +53,7 @@ ipcMain.handle(
   }
 );
 
-ipcMain.handle(IpcChannel.BreakLengthGet, (): Date => {
-  log.info(IpcChannel.BreakLengthGet);
-  return getBreakLength();
+ipcMain.handle(IpcChannel.BreakEndTimeGet, (): Date => {
+  log.info(IpcChannel.BreakEndTimeGet);
+  return getBreakEndTime();
 });

@@ -72,12 +72,7 @@ function BreakProgress(props: BreakProgressProps) {
     }
 
     (async () => {
-      const length = new Date(await ipcRenderer.invokeGetBreakLength());
-      const breakEndTime = moment()
-        .add(length.getHours(), "hours")
-        .add(length.getMinutes(), "minutes")
-        .add(length.getSeconds(), "seconds");
-
+      const breakEndTime = await ipcRenderer.invokeGetBreakEndtime();
       const startMsRemaining = moment(breakEndTime).diff(
         moment(),
         "milliseconds"

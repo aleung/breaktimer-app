@@ -17,8 +17,8 @@ process.once("loaded", () => {
     invokeGetAllowPostpone: () => {
       return ipcRenderer.invoke("ALLOW_POSTPONE_GET");
     },
-    invokeGetBreakLength: () => {
-      return ipcRenderer.invoke("BREAK_LENGTH_GET");
+    invokeGetBreakEndtime: () => {
+      return ipcRenderer.invoke("BREAK_END_TIME_GET");
     },
     invokeGetSettings: () => {
       return ipcRenderer.invoke("SETTINGS_GET");

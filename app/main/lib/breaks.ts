@@ -1,5 +1,5 @@
 import moment from "moment";
-import { PowerMonitor } from "electron";
+import { powerMonitor } from "electron";
 import log from "electron-log";
 
 import { Settings, NotificationType } from "../../types/settings";
@@ -13,7 +13,6 @@ import { createBreakWindows } from "./windows";
 
 const TICK_SECONDS = 2;
 
-let powerMonitor: PowerMonitor;
 let breakTime: BreakTime = null;
 let havingBreak = false;
 let postponedCount = 0;
@@ -23,9 +22,11 @@ export function getBreakTime(): BreakTime {
   return breakTime;
 }
 
-export function getBreakLength(): Date {
+export function getBreakEndTime(): Date {
   const settings: Settings = getSettings();
-  return settings.breakLength;
+  const breakStart = lastActiveTime > 0 ? lastActiveTime : Date.now();
+  const breakEnd = breakStart + getSeconds(settings.breakLength);
+  return new Date(breakEnd);
 }
 
 function getSeconds(date: Date): number {
@@ -119,16 +120,16 @@ enum IdleState {
 function getIdledSeconds(): number {
   const settings: Settings = getSettings();
   if (!settings.idleResetEnabled) {
+    lastActiveTime = 0; // in case setting was changed
     return 0;
   }
 
   const state = powerMonitor.getSystemIdleState(1) as IdleState;
-
   if (state === IdleState.Active) {
     lastActiveTime = Date.now();
   } else {
     if (lastActiveTime) {
-      return (Date.now() - lastActiveTime) / 1000 | 0;
+      return ((Date.now() - lastActiveTime) / 1000) | 0;
     }
   }
 
@@ -160,9 +161,9 @@ function tick(): void {
   const idledSeconds = getIdledSeconds();
 
   log.debug(
-    "tick - breakTime: ",
+    "tick - breakTime:",
     breakTime?.format(),
-    ", idledSeconds: ",
+    "idledSeconds:",
     idledSeconds
   );
 
@@ -186,8 +187,6 @@ function tick(): void {
 let tickInterval: NodeJS.Timeout;
 
 export function initBreaks(): void {
-  powerMonitor = require("electron").powerMonitor;
-
   const settings = getSettings();
 
   if (settings.breaksEnabled) {
