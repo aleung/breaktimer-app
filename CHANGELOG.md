@@ -1,5 +1,11 @@
 # Changelog
 
+## Build 2024-12-09
+
+Fix:
+
+- Break popup when computer is waked up from sleep. Idle reset doesn't work.
+
 ## Build 2024-12-06
 
 New feature:

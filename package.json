@@ -1,6 +1,6 @@
 {
   "name": "breaktimer",
-  "version": "2024.12.06",
+  "version": "2024.12.09",
   "productName": "BreakTimer",
   "description": "Manage periodic breaks",
   "scripts": {

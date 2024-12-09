@@ -114,31 +114,42 @@ enum IdleState {
 }
 
 /**
- * How long the computer has been idle
- * @returns {number} idle time in seconds
+ * Check if the computer is idle long enough to reset the break
+ * @returns {boolean} true to reset break
  */
-function getIdledSeconds(): number {
+function checkIdleReset(): boolean {
   const settings: Settings = getSettings();
   if (!settings.idleResetEnabled) {
     lastActiveTime = 0; // in case setting was changed
-    return 0;
+    return false;
   }
 
-  const state = powerMonitor.getSystemIdleState(1) as IdleState;
-  if (state === IdleState.Active) {
+  log.debug(
+    "checkIdleReset - lastActiveTime:",
+    new Date(lastActiveTime).toLocaleTimeString()
+  );
+
+  // calculate idled time base on last active time, regardless of current idle status
+  // in case the computer is just waked up from sleeping
+  const idledSeconds =
+    lastActiveTime > 0 ? ((Date.now() - lastActiveTime) / 1000) | 0 : 0;
+
+  if (!isIdle()) {
     lastActiveTime = Date.now();
-  } else {
-    if (lastActiveTime) {
-      return ((Date.now() - lastActiveTime) / 1000) | 0;
-    }
   }
 
-  return 0;
+  if (idledSeconds > getIdleResetSeconds()) {
+    lastActiveTime = 0;
+    return true;
+  } else {
+    return false;
+  }
 }
 
-function resetIdleTimer(): void {
-  lastActiveTime = 0;
+function isIdle(): boolean {
+  return powerMonitor.getSystemIdleState(1) !== IdleState.Active;
 }
+
 
 export function startBreakNow(): void {
   log.info("Forced start break now");
@@ -157,18 +168,7 @@ function tick(): void {
     return;
   }
 
-  // idledSeconds is always 0 if idle reset is disabled
-  const idledSeconds = getIdledSeconds();
-
-  log.debug(
-    "tick - breakTime:",
-    breakTime?.format(),
-    "idledSeconds:",
-    idledSeconds
-  );
-
-  if (idledSeconds > 0 && idledSeconds > getIdleResetSeconds()) {
-    resetIdleTimer();
+  if (checkIdleReset()) {
     breakTime = null;
     log.info("Idle reset");
   }
@@ -176,7 +176,7 @@ function tick(): void {
   if (breakTime && moment() > breakTime) {
     // it's time to have a break
     doBreak();
-  } else if (!breakTime && idledSeconds == 0) {
+  } else if (!breakTime && !isIdle()) {
     // we don't create next break if it's idle currently
     createBreak();
   }
