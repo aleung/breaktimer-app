@@ -5,6 +5,7 @@
 Fix:
 
 - Break popup when computer is waked up from sleep. Idle reset doesn't work.
+- Tray icon should be full when a break is finished but next break has not been created yet
 
 ## Build 2024-12-06
 

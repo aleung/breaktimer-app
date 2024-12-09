@@ -8,7 +8,6 @@ import { getSettings, setSettings } from "./store";
 import { createSettingsWindow } from "./windows";
 import { getBreakTime, startBreakNow, createBreak } from "./breaks";
 
-
 let tray: Tray;
 let lastMinsLeft = 0;
 
@@ -51,11 +50,7 @@ function getTrayIconPath(
 
   return process.env.NODE_ENV === "development"
     ? path.join("resources", "tray", trayIconFileName)
-    : path.join(
-        process.resourcesPath,
-        "tray",
-        trayIconFileName
-      );
+    : path.join(process.resourcesPath, "tray", trayIconFileName);
 }
 
 export function buildTray(): void {
@@ -109,8 +104,8 @@ export function buildTray(): void {
       } else {
         toolTip = `Next break in less than a minute`;
       }
-      tray.setImage(getTrayIconPath("active", minsLeft));
     }
+    tray.setImage(getTrayIconPath("active", minsLeft));
   } else {
     toolTip = "Disabled";
     tray.setImage(getTrayIconPath("disabled"));
