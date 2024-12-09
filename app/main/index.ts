@@ -23,6 +23,8 @@ function checkForUpdates(): void {
   autoUpdater.checkForUpdatesAndNotify();
 }
 
+log.info("Starting app...");
+
 if (process.env.NODE_ENV === "production") {
   const sourceMapSupport = require("source-map-support");
   sourceMapSupport.install();

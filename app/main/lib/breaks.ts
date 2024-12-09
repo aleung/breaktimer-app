@@ -124,15 +124,12 @@ function checkIdleReset(): boolean {
     return false;
   }
 
-  log.debug(
-    "checkIdleReset - lastActiveTime:",
-    new Date(lastActiveTime).toLocaleTimeString()
-  );
-
   // calculate idled time base on last active time, regardless of current idle status
   // in case the computer is just waked up from sleeping
   const idledSeconds =
     lastActiveTime > 0 ? ((Date.now() - lastActiveTime) / 1000) | 0 : 0;
+
+  log.debug("checkIdleReset - idledSeconds:", idledSeconds);
 
   if (!isIdle()) {
     lastActiveTime = Date.now();
@@ -149,7 +146,6 @@ function checkIdleReset(): boolean {
 function isIdle(): boolean {
   return powerMonitor.getSystemIdleState(1) !== IdleState.Active;
 }
-
 
 export function startBreakNow(): void {
   log.info("Forced start break now");
