@@ -115,31 +115,31 @@ enum IdleState {
 
 /**
  * Check if the computer is idle long enough to reset the break
- * @returns {boolean} true to reset break
  */
-function checkIdleReset(): boolean {
+function checkIdleReset(): void {
   const settings: Settings = getSettings();
   if (!settings.idleResetEnabled) {
     lastActiveTime = 0; // in case setting was changed
-    return false;
+    return;
   }
 
-  // calculate idled time base on last active time, regardless of current idle status
-  // in case the computer is just waked up from sleeping
-  const idledSeconds =
-    lastActiveTime > 0 ? ((Date.now() - lastActiveTime) / 1000) | 0 : 0;
+  if (breakTime) {
+    // calculate idled time base on last active time, regardless of current idle status
+    // in case the computer is just waked up from sleeping
+    const idledSeconds =
+      lastActiveTime > 0 ? ((Date.now() - lastActiveTime) / 1000) | 0 : 0;
 
-  log.debug("checkIdleReset - idledSeconds:", idledSeconds);
+    log.debug("checkIdleReset - idledSeconds:", idledSeconds);
 
-  if (!isIdle()) {
-    lastActiveTime = Date.now();
-  }
+    if (idledSeconds > getIdleResetSeconds()) {
+      lastActiveTime = 0;
+      breakTime = null;
+      log.info("Idle reset");
+    }
 
-  if (idledSeconds > getIdleResetSeconds()) {
-    lastActiveTime = 0;
-    return true;
-  } else {
-    return false;
+    if (!isIdle()) {
+      lastActiveTime = Date.now();
+    }
   }
 }
 
@@ -164,10 +164,7 @@ function tick(): void {
     return;
   }
 
-  if (checkIdleReset()) {
-    breakTime = null;
-    log.info("Idle reset");
-  }
+  checkIdleReset();
 
   if (breakTime && moment() > breakTime) {
     // it's time to have a break
