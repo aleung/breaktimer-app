@@ -18,8 +18,8 @@ let havingBreak = false;
 let postponedCount = 0;
 let lastActiveTime = 0;
 
-export function getBreakTime(): BreakTime {
-  return breakTime;
+export function getBreakTime(): [BreakTime, number] {
+  return [breakTime, postponedCount];
 }
 
 export function getBreakEndTime(): Date {
@@ -45,7 +45,11 @@ function getIdleResetSeconds(): number {
  * @param isPostpone Whether or not the break is being postponed
  */
 export function createBreak(isPostpone = false): void {
-  postponedCount = 0;
+  if (isPostpone) {
+    postponedCount++
+  } else {
+    postponedCount = 0;
+  }
 
   const settings: Settings = getSettings();
   const freq = new Date(
@@ -77,7 +81,6 @@ export function getAllowPostpone(): boolean {
 
 export function postponeBreak(): void {
   log.info("Postpone current break");
-  postponedCount++;
   havingBreak = false;
   createBreak(true);
 }

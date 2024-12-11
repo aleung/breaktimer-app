@@ -1,5 +1,15 @@
 # Changelog
 
+## Build 2024-12-11
+
+New feature:
+
+- Show tray icon an empty cup when the break was postponed
+
+Fix:
+
+- Postpone limit doesn't work
+
 ## Build 2024-12-09
 
 Fix:

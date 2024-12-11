@@ -14,12 +14,12 @@ let lastMinsLeft = 0;
 /**
  * Returns the path to the tray icon based on the status and the remaining minutes.
  *
- * @param {('disabled' | 'not-in-working-hours' | 'active')} status - The status of the tray icon.
+ * @param status - The status of the tray icon.
  * @param {number} [minsLeft] - The remaining minutes. Only used when the status is 'active'.
  * @return {string} The path to the tray icon.
  */
 function getTrayIconPath(
-  status: "disabled" | "not-in-working-hours" | "active",
+  status: "disabled" | "active" | "postponed",
   minsLeft?: number
 ): string {
   const settings = getSettings();
@@ -33,8 +33,8 @@ function getTrayIconPath(
       case "disabled":
         trayIconFileName = "icon-disabled.png";
         break;
-      case "not-in-working-hours":
-        trayIconFileName = "icon-off-work.png";
+      case "postponed":
+        trayIconFileName = "icon-empty.png";
         break;
       case "active":
         if (minsLeft !== undefined) {
@@ -90,7 +90,7 @@ export function buildTray(): void {
     });
   };
 
-  const breakTime = getBreakTime();
+  const [breakTime, postponedCount] = getBreakTime();
   const minsLeft = breakTime?.diff(moment(), "minutes");
 
   let toolTip = "";
@@ -105,7 +105,11 @@ export function buildTray(): void {
         toolTip = `Next break in less than a minute`;
       }
     }
-    tray.setImage(getTrayIconPath("active", minsLeft));
+    if (postponedCount > 0) {
+      tray.setImage(getTrayIconPath("postponed"));
+    } else {
+      tray.setImage(getTrayIconPath("active", minsLeft));
+    }
   } else {
     toolTip = "Disabled";
     tray.setImage(getTrayIconPath("disabled"));
@@ -145,7 +149,7 @@ export function buildTray(): void {
 export function initTray(): void {
   buildTray();
   setInterval(() => {
-    const breakTime = getBreakTime();
+    const [breakTime, _postponedCount] = getBreakTime();
     if (breakTime === null) {
       return;
     }
