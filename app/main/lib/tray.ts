@@ -3,10 +3,16 @@ import moment from "moment";
 import { app, dialog, Menu, Tray } from "electron";
 
 import packageJson from "../../../package.json";
-import { Settings } from "../../types/settings";
-import { getSettings, setSettings } from "./store";
+import { getSettings } from "./store";
 import { createSettingsWindow } from "./windows";
-import { getBreakTime, startBreakNow, createBreak } from "./breaks";
+import {
+  OptionalTime,
+  getBreakTime,
+  startBreakNow,
+  createBreak,
+  getDndEndTime,
+  setDndEndTime,
+} from "./breaks";
 
 let tray: Tray;
 let lastMinsLeft = 0;
@@ -66,12 +72,8 @@ export function buildTray(): void {
     }
   }
 
-  let settings: Settings = getSettings();
-  const breaksEnabled = settings.breaksEnabled;
-
-  const setBreaksEnabled = (breaksEnabled: boolean): void => {
-    settings = getSettings();
-    setSettings({ ...settings, breaksEnabled });
+  const updateDndEndTime = (dndEndTime: OptionalTime): void => {
+    setDndEndTime(dndEndTime);
     buildTray();
   };
 
@@ -95,7 +97,12 @@ export function buildTray(): void {
 
   let toolTip = "";
 
-  if (breaksEnabled) {
+  if (getDndEndTime().isAfter()) {
+    toolTip = `Do not disturb ${getDndEndTime().fromNow()} (${getDndEndTime().format(
+      "HH:mm"
+    )})`;
+    tray.setImage(getTrayIconPath("disabled"));
+  } else {
     if (minsLeft !== undefined) {
       if (minsLeft > 1) {
         toolTip = `Next break in ${minsLeft} minutes`;
@@ -110,21 +117,49 @@ export function buildTray(): void {
     } else {
       tray.setImage(getTrayIconPath("active", minsLeft));
     }
-  } else {
-    toolTip = "Disabled";
-    tray.setImage(getTrayIconPath("disabled"));
   }
 
   const contextMenu = Menu.buildFromTemplate([
     {
       label: toolTip,
-      visible: breaksEnabled && breakTime !== null,
+      visible: toolTip !== "",
       enabled: false,
     },
     { type: "separator" },
     {
-      label: breaksEnabled ? "Disable" : "Enable",
-      click: setBreaksEnabled.bind(null, !breaksEnabled),
+      label: "Stop DND",
+      click: updateDndEndTime.bind(null, null),
+      visible: getDndEndTime().isAfter(),
+    },
+    {
+      label: "Do not disturb...",
+      submenu: [
+        {
+          label: "Untill the next hour",
+          click: () => updateDndEndTime(moment().endOf("hour")),
+        },
+        {
+          label: "30 minutes",
+          click: () => updateDndEndTime(moment().add(30, "minutes")),
+        },
+        {
+          label: "1 hour",
+          click: () => updateDndEndTime(moment().add(60, "minutes")),
+        },
+        {
+          label: "2 hours",
+          click: () => updateDndEndTime(moment().add(2, "hours")),
+        },
+        {
+          label: "4 hours",
+          click: () => updateDndEndTime(moment().add(4, "hours")),
+        },
+        {
+          label: "Rest of the day",
+          click: () => updateDndEndTime(moment().endOf("day")),
+        },
+      ],
+      visible: getDndEndTime().isBefore(),
     },
     {
       label: "Start break now",

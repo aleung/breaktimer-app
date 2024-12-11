@@ -134,14 +134,7 @@ export default function SettingsEl() {
         textColor={settingsDraft.textColor}
       />
       <main className={settingsClassName}>
-        <FormGroup>
-          <Switch
-            label="Breaks enabled"
-            checked={settingsDraft.breaksEnabled}
-            onChange={handleSwitchChange.bind(null, "breaksEnabled")}
-          />
-        </FormGroup>
-        <Tabs defaultSelectedTabId="break-settings">
+         <Tabs defaultSelectedTabId="break-settings">
           <Tab
             id="break-settings"
             title="Break Settings"

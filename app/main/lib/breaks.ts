@@ -3,7 +3,6 @@ import { powerMonitor } from "electron";
 import log from "electron-log";
 
 import { Settings, NotificationType } from "../../types/settings";
-import { BreakTime } from "../../types/breaks";
 import { IpcChannel } from "../../types/ipc";
 import { sendIpc } from "./ipc";
 import { getSettings } from "./store";
@@ -11,14 +10,17 @@ import { buildTray } from "./tray";
 import { showNotification } from "./notifications";
 import { createBreakWindows } from "./windows";
 
+export type OptionalTime = moment.Moment | null;
+
 const TICK_SECONDS = 2;
 
-let breakTime: BreakTime = null;
+let breakTime: OptionalTime = null;
+let dndEndTime = moment().subtract(1, "hours");
 let havingBreak = false;
 let postponedCount = 0;
 let lastActiveTime = 0;
 
-export function getBreakTime(): [BreakTime, number] {
+export function getBreakTime(): [OptionalTime, number] {
   return [breakTime, postponedCount];
 }
 
@@ -27,6 +29,18 @@ export function getBreakEndTime(): Date {
   const breakEndTime =
     breakStart + getSeconds(new Date(getSettings().breakLength)) * 1000;
   return new Date(breakEndTime);
+}
+
+export function getDndEndTime(): moment.Moment {
+  return dndEndTime;
+}
+
+export function setDndEndTime(t: OptionalTime): void {
+  if (t === null) {
+    dndEndTime = moment().subtract(1, "hours");
+  } else {
+  dndEndTime = t;
+  }
 }
 
 function getSeconds(date: Date): number {
@@ -45,6 +59,8 @@ function getIdleResetSeconds(): number {
  * @param isPostpone Whether or not the break is being postponed
  */
 export function createBreak(isPostpone = false): void {
+  havingBreak = false;
+
   if (isPostpone) {
     postponedCount++
   } else {
@@ -81,7 +97,6 @@ export function getAllowPostpone(): boolean {
 
 export function postponeBreak(): void {
   log.info("Postpone current break");
-  havingBreak = false;
   createBreak(true);
 }
 
@@ -92,6 +107,12 @@ function doBreak(): void {
   log.info("It's time to have a break");
   havingBreak = true;
 
+  if (dndEndTime.isAfter()) {
+    // auto postpone if it is in Do Not Disturb duration
+    postponeBreak();
+    return;
+  }
+
   const settings = getSettings();
 
   if (settings.notificationType === NotificationType.Notification) {
@@ -100,7 +121,6 @@ function doBreak(): void {
     if (settings.gongEnabled) {
       sendIpc(IpcChannel.GongStartPlay);
     }
-    havingBreak = false;
     createBreak();
   }
 
@@ -109,12 +129,6 @@ function doBreak(): void {
   }
 }
 
-enum IdleState {
-  Active = "active",
-  Idle = "idle",
-  Locked = "locked",
-  Unknown = "unknown",
-}
 
 /**
  * Check if the computer is idle long enough to reset the break
@@ -147,7 +161,7 @@ function checkIdleReset(): void {
 }
 
 function isIdle(): boolean {
-  return powerMonitor.getSystemIdleState(1) !== IdleState.Active;
+  return powerMonitor.getSystemIdleState(1) !== "active";
 }
 
 export function startBreakNow(): void {

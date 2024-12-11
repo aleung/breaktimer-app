@@ -1,9 +1,13 @@
 # Changelog
 
-## Build 2024-12-11
+## Build 2024-12-12
 
 New feature:
 
+- Do not distrub: break will be automatically postponed if it is in Do Not Disturb duration.
+  - You can set DND in next few hours, until next hour, or until next day.
+  - DND doesn't stop the break timer. Break may popup after DND ends. Idle reset takes effect during DND as well.
+  - DND replaces the disable break feature. If you want to totally disable break as before, just quit the app.
 - Show tray icon an empty cup when the break was postponed
 
 Fix:
